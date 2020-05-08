@@ -8,7 +8,7 @@ set.seed(123)
 # Generating df with dummy data
 df <- tibble(
   "ProjectID" = c(1:5), "ProjectName" = c("Project A", "Project B", "Project C", "Project D", "Project E"),
-  "ProjectMainCatecory" = as.factor(sample(LETTERS, 5, FALSE)), "ProjectValue" = c("2.0 - 3.0 Mio USD", "300.0 Mio USD", "", "0.1 - 0.4 Mio USD", "23.0 Mio USD")
+  "ProjectMainCatecory" = as.factor(sample(LETTERS, 5, FALSE)), "ProjectValue" = c("2.0 - 3.0 Mio USD", "300.0 Mio USD", "", "0.1 - 0.4 Mio USD", NA)
 )
 # Check output in console
 df
@@ -18,6 +18,10 @@ df
 case_1 <- "2.0 - 3.0 Mio USD"
 case_2 <- "300.0 Mio USD"
 case_3 <- ""
+case_4 <- NA
+
+# Replace NA functionality of tidyr
+no_empties <- replace_na(case_4, "")
 
 # Checking functionality of stringr functions
 del_space <- str_replace_all(case_1, "[:space:]", "")
@@ -27,8 +31,10 @@ del_char
 
 # Definiton of cost transform function
 cost_transform <- function(string) {
+  # Treat NAs as empty strings ("")
+  no_empties <- replace_na(string, "")
   # Insert string clean functionality
-  del_space <- str_replace_all(string, "[:space:]", "")
+  del_space <- str_replace_all(no_empties, "[:space:]", "")
   del_char <- str_replace_all(del_space, "[:alpha:]", "")
   # If-else clause definition
   # If no "-" is found return the cost as numeric type
@@ -50,20 +56,20 @@ cost_transform <- function(string) {
 test_p1 <- cost_transform(case_1)
 test_p2 <- cost_transform(case_2)
 test_p3 <- cost_transform(case_3)
+test_p4 <- cost_transform(case_4)
 
 # Check output
 test_p1
 test_p2
 test_p3
+test_p4
 
 
 # See how function works within data wrangling pipeline
 df_pipeline <- df %>%
   # Select some columns
   select(ProjectID, ProjectMainCatecory, ProjectValue) %>%
-  # To treat empty strings, replace str NAs with an empty string
   mutate(
-    ProjectValue = replace_na(ProjectValue, ""),
     # Apply map function
     # (only renaming to get direct comparison)
     ProjectValueNew = map_dbl(ProjectValue, cost_transform)
@@ -71,3 +77,6 @@ df_pipeline <- df %>%
 
 # Look at output (glimpse())
 df_pipeline
+
+
+
